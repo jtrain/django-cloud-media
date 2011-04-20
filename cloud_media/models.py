@@ -1,8 +1,11 @@
 from django.conf import settings
-from django.contrib.contenttypes.models import ContentType
-from django.db import models
-from django.utils.translation import ugettext_lazy as _
 from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils.translation import ugettext_lazy as _
 
 import cloud_media.settings as backup_settings
 
@@ -10,12 +13,19 @@ HOSTING_PROVIDERS = getattr(settings,
                             'CLOUD_MEDIA_HOSTING_PROVIDERS',
                             backup_settings.CLOUD_MEDIA_HOSTING_PROVIDERS)
 
+
+#-------------------------------------------------------------------
+# managers.
+
 class ResourceManager(models.Manager):
     def get_by_natural_key(self, resource_id, resource_type):
         return self.get(
                 resource_id=resource_id,
               resource_type=resource_type
         )
+
+#-------------------------------------------------------------------
+# models.
 
 class Resource(models.Model):
     """
@@ -142,3 +152,21 @@ class RelatedMedia(models.Model):
         verbose_name        = _("related media")
         verbose_name_plural = _("related media")
         ordering            = ('content_type', 'object_id')
+
+
+#-------------------------------------------------------------------
+# signals.
+
+@receiver(post_save, sender=Resource)
+def invalidate_resource_cache(sender, instance, **kwargs):
+    """
+    Invalidate the cache for key(resource_id, resource_type).replace(' ', '')
+    when a save is made, just in case an update is required.
+
+    """
+    obj = instance
+
+    key = unicode((obj.resource_type, obj.resource_id)).replace(' ', '')
+    if cache.get(key):
+        cache.delete(key)
+
