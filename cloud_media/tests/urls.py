@@ -2,7 +2,7 @@ from django.conf.urls.defaults import patterns, url
 
 from cloud_media.tests.models import FamousPerson
 
-def make_test_url(number, template_name=None, extra_context=None):
+def make_test_url(number, prefix='', template_name=None, extra_context=None):
     if not template_name:
         template_name = '%d.html' % number
 
@@ -10,13 +10,13 @@ def make_test_url(number, template_name=None, extra_context=None):
         extra_context = {}
     extra_context.update({'people': FamousPerson.objects.all})
 
-    return url(r'^%d$' % number,
+    return url(r'^%s%d$' % (prefix, number),
                 'django.views.generic.simple.direct_to_template',
                 {'template': template_name,
                  'extra_context': extra_context})
 
 urlpatterns = patterns('',
-            make_test_url(1),
-            make_test_url(2)
+            make_test_url(2),
+            make_test_url(2, prefix='blip/', template_name='blip2.html')
 
 )

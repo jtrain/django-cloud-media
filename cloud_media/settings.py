@@ -1,10 +1,10 @@
 
 CLOUD_MEDIA_HOSTING_PROVIDERS = (
-                    (0,         'Blip.TV'      ),
+                    ('blip.tv', 'Blip.TV'      ),
                     ('default', 'Local Storage'),
 )
 
 CLOUD_MEDIA_HOSTING_BACKENDS  = {
-                     0: 'cloud_media.backends.BlipTvBackend',
+             'blip.tv': 'cloud_media.backends.bliptv.BlipTVStorage',
              'default': 'cloud_media.backends.default.LocalStorage',
 }

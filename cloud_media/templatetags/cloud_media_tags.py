@@ -50,17 +50,6 @@ def retrieve_media_for(parser, token):
 
     return RelatedMediaForObjectNode(**kwargs)
 
-@register.inclusion_tag('cloud_media/includes/default.html')
-def render_media_for(obj, template_name='cloud_media/includes/default.html'):
-    """
-    Finds media attached to obj and renders with the template provided.
-
-    """
-    media_content = _get_media_for(obj)
-
-    return {'template_name': template_name,
-            'media_content': media_content}
-                
 #-------------------------------------------------------------------------
 # Utility functions.
 
