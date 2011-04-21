@@ -101,9 +101,9 @@ class Resource(models.Model):
 
     def __unicode__(self):
         return u'%s %s %s' % (
-                unicode(self.title),
+                self.title,
                 _('on'),
-                unicode(self.get_resource_type_display))
+                self.get_resource_type_display())
 
     def natural_key(self):
         return (self.resource_id, self.resource_type)
