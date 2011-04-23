@@ -26,7 +26,11 @@ class DefaultStorageForm(forms.Form):
 
     resource = forms.FileField(required=True, max_length=255)
 
-    def get_resource_id(self, backend):
+    def create_resource(self, request, backend):
+        resource = self.cleaned_data['resource']
+        return backend.save_resource(resource)
+
+    def get_resource_id(self, request, backend):
         """
         return a json string that looks like:
 
@@ -39,9 +43,7 @@ class DefaultStorageForm(forms.Form):
         using the backend argument provided.
 
         """
-        resource = self.cleaned_data['resource']
-        stored = backend.save_resource(resource)
-        # create the resource id:
+        stored = self.create_resource(request, backend)
         
         model = "%s.%s" % (stored._meta.app_label,
                            stored._meta.object_name)
@@ -127,14 +129,13 @@ class LocalStorage(object):
         This function interprets resource_id as a JSON field:
         {'model': 'appname.modelname',
          'pk'   : 'primarykey',
-         'url'  : 'get_absolute_url'
+         'url'  : 'file_url'
         }
 
         ModelName: The appname.modelname to identify which model we should look
                    up.
         pk       : The primary key to identify which model instance to get.
-        url      : an attribute or method on the model which will return the
-                   model url.
+        url      : the url of the resource (optional).
 
         """
         resource_id = loads(resource.resource_id)
@@ -143,9 +144,11 @@ class LocalStorage(object):
         Model = get_model(*resource_id['model'].split('.'))
         obj = Model._default_manager.get(pk=resource_id['pk'])
 
-        _url = getattr(obj, resource_id['url'])
-        local_url = _url() if callable(_url) else _url
+        local_url = resource_id.get('url')
+        if local_url:
+            return local_url
 
-        return local_url
+        filefield = getattr(obj, self.get_storage_filefield_name())
+        return filefield.url
 
         
