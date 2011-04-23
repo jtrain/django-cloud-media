@@ -27,6 +27,18 @@ class DefaultStorageForm(forms.Form):
     resource = forms.FileField(required=True, max_length=255)
 
     def get_resource_id(self, backend):
+        """
+        return a json string that looks like:
+
+        {'model': 'appname.modelname',
+         'pk'   : 'primarykey',
+         'url'  : 'get_absolute_url'
+        }
+
+        the function creates and saves a new resource in the local storage by
+        using the backend argument provided.
+
+        """
         resource = self.cleaned_data['resource']
         stored = backend.save_resource(resource)
         # create the resource id:

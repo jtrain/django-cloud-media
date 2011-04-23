@@ -5,16 +5,19 @@ Backend for uploading and downloading from http://www.blip.tv.
 try:
     import json
     loads = json.loads
+    dumps = json.dumps
 except ImportError:
     from django.core import serializers
     from functools import partial
     loads = partial(serializers.deserialize, "json")
+    dumps = serializers.serialize("json")()
 
 try:
     from urllib2 import urlopen
 except ImportError:
     from urllib import urlopen
 
+from django import forms
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
@@ -29,7 +32,29 @@ CACHE_TIME = getattr(
                 "CLOUD_MEDIA_REMOTE_RESOURCE_CACHE_TIME",
                 backup_settings.CLOUD_MEDIA_REMOTE_RESOURCE_CACHE_TIME)
 
+class BlipTVURLForm(forms.Form):
+    """
+    A custom form that allows a person to copy+paste the blip.tv video url (no
+    direct upload I am afraid yet..)
+
+    """
+    video_url = forms.URLField()
+
+    def get_resource_id(self, backend):
+        """
+        Returns a json string that looks like:
+
+        {'url':'url for the blip_tv_video'}
+
+        where the url value is the 'video_url' field on this form.
+
+        """
+        return dumps({'url': self.cleaned_data['video_url']})
+
 class BlipTVStorage(object):
+
+    def get_form(self):
+        return BlipTVURLForm
 
     def blip_file_uri(self):
         return u"http://www.blip.tv/file/%s/?skin=json"
