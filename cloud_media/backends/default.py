@@ -13,10 +13,12 @@ except ImportError:
     loads = partial(serializers.deserialize, "json")
     dumps = serializers.serialize("json")()
 
+from django import forms
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import get_model
-from django import forms
+
+from cloud_media.backends.base import BaseStorage
 
 class DefaultStorageForm(forms.Form):
     """
@@ -54,7 +56,7 @@ class DefaultStorageForm(forms.Form):
 
         return dumps({'model': model, 'pk': pk, 'url': url})
 
-class LocalStorage(object):
+class LocalStorage(BaseStorage):
     """
     A base class to provide storage locally on your server.
 
@@ -77,6 +79,12 @@ class LocalStorage(object):
             return 'stored_file'
 
     """
+
+    def get_template(self):
+        return "cloud_media/backends/default_serve.html"
+
+    def get_template_resource_name(self):
+        return "resource"
 
     def get_form(self):
         return DefaultStorageForm
@@ -145,10 +153,10 @@ class LocalStorage(object):
         obj = Model._default_manager.get(pk=resource_id['pk'])
 
         local_url = resource_id.get('url')
-        if local_url:
-            return local_url
+        if not local_url:
+            local_url = getattr(obj, self.get_storage_filefield_name()).url
 
-        filefield = getattr(obj, self.get_storage_filefield_name())
-        return filefield.url
+        resource.payload = local_url
 
-        
+        return self.render_resource(resource)
+

@@ -25,6 +25,7 @@ from django.db.models import get_model
 
 import cloud_media.settings as backup_settings
 from cloud_media.exceptions import StorageException
+from cloud_media.backends.base import BaseStorage
 
 # time in seconds to cache the result of a remote resource.
 CACHE_TIME = getattr(
@@ -51,7 +52,10 @@ class BlipTVURLForm(forms.Form):
         """
         return dumps({'url': self.cleaned_data['video_url']})
 
-class BlipTVStorage(object):
+class BlipTVStorage(BaseStorage):
+
+    def get_template(self):
+        return u'cloud_media/backends/blip_serve.html'
 
     def get_form(self):
         return BlipTVURLForm
@@ -119,10 +123,8 @@ class BlipTVStorage(object):
         blip_json = illformatted_json.replace('blip_ws_results(', '')[:-3]
 
         embed_url = loads(blip_json)[0]['embedUrl']
-        return ('<embed src="%s" '
-                   'type="application/x-shockwave-flash" width="480" '
-                   'height="300" allowscriptaccess="always" '
-                   'allowfullscreen="true">'
-                 '</embed>') % embed_url
+        resource.payload = embed_url
+
+        return self.render_resource(resource)
 
 
