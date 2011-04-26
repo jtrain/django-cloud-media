@@ -90,7 +90,7 @@ class RemoteMediaWizard(FormWizard):
         resource_id = None
         for form in form_list:
             try:
-                resource_id = form.get_resource_id(self.backend)
+                resource_id = form.get_resource_id(request, self.backend)
             except AttributeError:
                 pass
             data.update(form.cleaned_data)

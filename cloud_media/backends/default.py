@@ -13,10 +13,12 @@ except ImportError:
     loads = partial(serializers.deserialize, "json")
     dumps = serializers.serialize("json")()
 
+from django import forms
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import get_model
-from django import forms
+
+from cloud_media.backends.base import BaseStorage
 
 class DefaultStorageForm(forms.Form):
     """
@@ -26,7 +28,11 @@ class DefaultStorageForm(forms.Form):
 
     resource = forms.FileField(required=True, max_length=255)
 
-    def get_resource_id(self, backend):
+    def create_resource(self, request, backend):
+        resource = self.cleaned_data['resource']
+        return backend.save_resource(resource)
+
+    def get_resource_id(self, request, backend):
         """
         return a json string that looks like:
 
@@ -39,9 +45,7 @@ class DefaultStorageForm(forms.Form):
         using the backend argument provided.
 
         """
-        resource = self.cleaned_data['resource']
-        stored = backend.save_resource(resource)
-        # create the resource id:
+        stored = self.create_resource(request, backend)
         
         model = "%s.%s" % (stored._meta.app_label,
                            stored._meta.object_name)
@@ -52,7 +56,7 @@ class DefaultStorageForm(forms.Form):
 
         return dumps({'model': model, 'pk': pk, 'url': url})
 
-class LocalStorage(object):
+class LocalStorage(BaseStorage):
     """
     A base class to provide storage locally on your server.
 
@@ -75,6 +79,12 @@ class LocalStorage(object):
             return 'stored_file'
 
     """
+
+    def get_template(self):
+        return "cloud_media/backends/default_serve.html"
+
+    def get_template_resource_name(self):
+        return "resource"
 
     def get_form(self):
         return DefaultStorageForm
@@ -127,14 +137,13 @@ class LocalStorage(object):
         This function interprets resource_id as a JSON field:
         {'model': 'appname.modelname',
          'pk'   : 'primarykey',
-         'url'  : 'get_absolute_url'
+         'url'  : 'file_url'
         }
 
         ModelName: The appname.modelname to identify which model we should look
                    up.
         pk       : The primary key to identify which model instance to get.
-        url      : an attribute or method on the model which will return the
-                   model url.
+        url      : the url of the resource (optional).
 
         """
         resource_id = loads(resource.resource_id)
@@ -143,9 +152,11 @@ class LocalStorage(object):
         Model = get_model(*resource_id['model'].split('.'))
         obj = Model._default_manager.get(pk=resource_id['pk'])
 
-        _url = getattr(obj, resource_id['url'])
-        local_url = _url() if callable(_url) else _url
+        local_url = resource_id.get('url')
+        if not local_url:
+            local_url = getattr(obj, self.get_storage_filefield_name()).url
 
-        return local_url
+        resource.payload = local_url
 
-        
+        return self.render_resource(resource)
+
