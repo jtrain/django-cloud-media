@@ -4,16 +4,29 @@
 {% block content %}
 
 <div id="content-main">
-    <form {% if form.is_multipart %}enctype="multipart/form-data" {% endif %}method="post" action="" id="{{ opts.module_name }}_form">
+  <form {% if form.is_multipart %}enctype="multipart/form-data" {% endif %}
+          method="post" action="" id="{{ opts.module_name }}_form"
+  >
+
+    {% with form.adminform as adminform %}
       {% csrf_token %}
-      {{ form }}
-      <input type="hidden" name="{{ step_field }}" value="{{ step0 }}" />
-      {{ previous_fields|safe }}
-      {% if is_popup %}<input type="hidden" name="_popup" value="1" />{% endif %}
+      {% for fieldset in adminform %}
+        {% include "admin/includes/fieldset.html" %}
+      {% endfor %}
+    {% endwith %}
+
+    <input type="hidden" name="{{ step_field }}" value="{{ step0 }}" />
+    {{ previous_fields|safe }}
+    {% if is_popup %}<input type="hidden" name="_popup" value="1" />{% endif %}
     <div class="submit=row">
-    <input type="submit" value="{% ifequal step step_count %}Finish{% else %}Next &raquo;{% endifequal %}" class="default" name="_save" />
-            <script type="text/javascript">document.getElementById("{{ form.first_field.auto_id }}").focus();</script>
+      <input type="submit" 
+             value="{% ifequal step step_count %}Finish{% else %}Next &raquo;{% endifequal %}" 
+              class="default" name="_save" 
+      />
+     <script type="text/javascript">
+        document.getElementById("{{ form.first_field.auto_id }}").focus();
+      </script>
     </div>
-    </form>
+  </form>
 </div>
 {% endblock %}

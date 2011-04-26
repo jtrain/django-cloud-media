@@ -4,6 +4,7 @@ A collection of forms for adding a new resource in the admin.
 """
 from django import forms
 from django.conf import settings
+from django.contrib.admin.helpers import AdminForm
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import ugettext_lazy as _
 from django.utils.importlib import import_module
@@ -121,6 +122,10 @@ class RemoteMediaWizard(FormWizard):
         """
         context = context or {}
         context.update(self.extra_context)
+
+        # add the adminform mixin to form's class.
+        form.__class__.__bases__ = (AdminFormMixin,)
+
         return render_to_response(self.get_template(step), dict(context,
             step_field=self.step_field_name,
             step0=step,
@@ -157,6 +162,29 @@ def _load_backend(backend):
                                            func_name)
 
     return  _backends_cache[backend]
+
+class AdminFormMixin(forms.Form):
+    """
+    Provides some admin-form-like features to ease the pain of having non
+    modeladmin forms in the admin. 
+
+    Idea inspired by the formadmin project.
+    """
+    fieldsets = ()
+    prepopulated_fields = {}
+    readonly_fields = None
+    model_admin = None
+
+    def adminform(self):
+        if not self.fieldsets:
+            self.fieldsets = [
+                        (None,
+                            {'fields':
+                                self.fields.keys()})
+            ]
+        adminform = AdminForm(self, self.fieldsets, self.prepopulated_fields,
+                              self.readonly_fields, self.model_admin)
+        return adminform
 
 class RemoteMediaBasicForm(forms.Form):
     """
