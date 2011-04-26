@@ -28,6 +28,36 @@ HOSTING_PROVIDERS = getattr(
                 backup_settings.CLOUD_MEDIA_HOSTING_PROVIDERS)
                 
 
+#----------------------------------------------------------------------
+# Mixins.
+
+class AdminFormMixin(forms.Form):
+    """
+    Provides some admin-form-like features to ease the pain of having non
+    modeladmin forms in the admin. 
+
+    Idea inspired by the formadmin project.
+    """
+    fieldsets = ()
+    prepopulated_fields = {}
+    readonly_fields = None
+    model_admin = None
+
+    def adminform(self):
+        if not self.fieldsets:
+            self.fieldsets = [
+                        (None,
+                            {'fields':
+                                self.fields.keys()})
+            ]
+        adminform = AdminForm(self, self.fieldsets, self.prepopulated_fields,
+                              self.readonly_fields, self.model_admin)
+        return adminform
+
+
+#--------------------------------------------------------------------------
+# wizard.
+
 class RemoteMediaWizard(FormWizard):
     """
     User fills in generic title + description on page 1.
@@ -35,6 +65,11 @@ class RemoteMediaWizard(FormWizard):
     for the file. It could be a BlipForm or a YoutubeForm etc..
 
     """
+    _mixins = (AdminFormMixin,)
+
+    @property
+    def mixins(self):
+        return self._mixins
 
     @property
     def __name__(self):
@@ -99,9 +134,19 @@ class RemoteMediaWizard(FormWizard):
 
         self.form_list[1] = NextForm
 
-    def render_template(self, request, form, previous_fields, step, context=None):
+    def add_mixins(self, form, mixins):
         """
-        Renders the template for the given step, returning an HttpResponse object.
+        Add a new set of base classes to the form's class for dynamic
+        inheritance of Mixins.
+
+        """
+        form.__class__.__bases__ = mixins
+
+    def render_template(self, request, form, previous_fields, step,
+                                                            context=None):
+        """
+        Renders the template for the given step, returning an HttpResponse
+        object.
 
         Override this method if you want to add a custom context, return a
         different MIME type, etc. If you only need to override the template
@@ -123,8 +168,8 @@ class RemoteMediaWizard(FormWizard):
         context = context or {}
         context.update(self.extra_context)
 
-        # add the adminform mixin to form's class.
-        form.__class__.__bases__ = (AdminFormMixin,)
+        # allow dynamic mixins to be added to the form.
+        self.add_mixins(form, self.mixins)
 
         return render_to_response(self.get_template(step), dict(context,
             step_field=self.step_field_name,
@@ -149,42 +194,8 @@ class RemoteMediaWizard(FormWizard):
             'app_label': opts.app_label,
         })
 
-_backends_cache = {}
-def _load_backend(backend):
-    if not backend:
-            raise ImproperlyConfigured(
-                "%s isn't in your CLOUD_MEDIA_HOSTING_BACKENDS"
-                "and neither is 'default'" % resource_type)
-            
-    if backend not in _backends_cache:
-        module_name, func_name = backend.rsplit('.', 1)
-        _backends_cache[backend] = getattr(import_module(module_name),
-                                           func_name)
-
-    return  _backends_cache[backend]
-
-class AdminFormMixin(forms.Form):
-    """
-    Provides some admin-form-like features to ease the pain of having non
-    modeladmin forms in the admin. 
-
-    Idea inspired by the formadmin project.
-    """
-    fieldsets = ()
-    prepopulated_fields = {}
-    readonly_fields = None
-    model_admin = None
-
-    def adminform(self):
-        if not self.fieldsets:
-            self.fieldsets = [
-                        (None,
-                            {'fields':
-                                self.fields.keys()})
-            ]
-        adminform = AdminForm(self, self.fieldsets, self.prepopulated_fields,
-                              self.readonly_fields, self.model_admin)
-        return adminform
+#--------------------------------------------------------------------------
+# Forms.
 
 class RemoteMediaBasicForm(forms.Form):
     """
@@ -201,3 +212,22 @@ class RemoteMediaBasicForm(forms.Form):
                     )
 
 remote_media_wizard = RemoteMediaWizard([RemoteMediaBasicForm, 0])
+
+
+#----------------------------------------------------------------------------
+# Helpers.
+
+_backends_cache = {}
+def _load_backend(backend):
+    if not backend:
+            raise ImproperlyConfigured(
+                "%s isn't in your CLOUD_MEDIA_HOSTING_BACKENDS"
+                "and neither is 'default'" % resource_type)
+            
+    if backend not in _backends_cache:
+        module_name, func_name = backend.rsplit('.', 1)
+        _backends_cache[backend] = getattr(import_module(module_name),
+                                           func_name)
+
+    return  _backends_cache[backend]
+
