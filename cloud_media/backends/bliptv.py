@@ -41,7 +41,7 @@ class BlipTVURLForm(forms.Form):
     """
     video_url = forms.URLField()
 
-    def get_resource_id(self, backend):
+    def get_resource_id(self, request, backend):
         """
         Returns a json string that looks like:
 
