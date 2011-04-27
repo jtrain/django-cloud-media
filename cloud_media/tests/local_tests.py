@@ -45,8 +45,8 @@ class LocalStorageBaseCase(CloudMediaBaseCase):
         # now create a resource object.
         resource_id = dumps(
                         dict(model='tests.storage',
-                                pk=self.storedfile.pk,
-                               url='get_file_url')
+                             pk=self.storedfile.pk,
+                             url=self.storedfile.file.url)
         )
                     
         self.resource = Resource.objects.create(
@@ -86,11 +86,10 @@ class LocalStorageRetrieval(LocalStorageBaseCase):
         backend = LocalStorage()
         url = backend.serve(self.resource)
 
-        self.assertEqual(
-                url,
-                self.storedfile.file.url)
+        self.assertTrue(
+                self.storedfile.file.url in url)
 
     def test_retrieve_media_template_tag(self):
         response = self.client.get('/2')
         self.assertContains(response,
-                            self.storedfile.file.url, count=2, status_code=200)
+                            self.storedfile.file.url, count=1, status_code=200)

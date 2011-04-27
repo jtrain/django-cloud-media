@@ -129,7 +129,7 @@ class LocalStorage(BaseStorage):
     def serve(self, resource):
         """
         Retrieve the resource from the local storage provider and return 
-        the local resource url. 
+        the local resource url.
 
         Interpretation of resource_id
         -----------------------------

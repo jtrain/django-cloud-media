@@ -7,7 +7,7 @@
   {% for person in people %}
     {% retrieve_media_for person as "person_media" %}
     {% for media in person_media %}
-      <a href="{{ media }}">{{ media }}</a>
+      {{ media }}
     {% endfor %}
   {% endfor %}
 

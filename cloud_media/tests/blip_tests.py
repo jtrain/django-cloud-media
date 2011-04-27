@@ -150,22 +150,14 @@ class BlipStorageRetrieval(BlipTVStorageBaseCase):
         backend = BlipTVNoDownloadStorage()
         embed = backend.serve(self.resource)
 
-        self.assertEqual(
-                embed,
-                ('<embed src="http://blip.tv/play/AYKnyioC" '
-                   'type="application/x-shockwave-flash" width="480" '
-                   'height="300" allowscriptaccess="always" '
-                   'allowfullscreen="true">'
-                 '</embed>'))
+        self.assertTrue(
+                embed.startswith('<embed src="http://blip.tv/play/AYKnyioC"'))
 
     def test_retrieve_media_template_tag(self):
         response = self.client.get('/blip/2')
         self.assertContains(response,
-                        ('<embed src="http://blip.tv/play/AYKnyioC" '
-                   'type="application/x-shockwave-flash" width="480" '
-                   'height="300" allowscriptaccess="always" '
-                   'allowfullscreen="true">'
-                 '</embed>'), count=1, status_code=200)
+                        '<embed src="http://blip.tv/play/AYKnyioC"',
+                        count=1, status_code=200)
 
     def test_json_response_cached(self):
         """
@@ -189,13 +181,8 @@ class BlipStorageRetrieval(BlipTVStorageBaseCase):
 
         self.assertEqual(backend.count, 1)
 
-        self.assertEqual(
-                embed,
-                ('<embed src="http://blip.tv/play/AYKnyioC" '
-                   'type="application/x-shockwave-flash" width="480" '
-                   'height="300" allowscriptaccess="always" '
-                   'allowfullscreen="true">'
-                 '</embed>'))
+        self.assertTrue(
+                embed.startswith('<embed src="http://blip.tv/play/AYKnyioC"'))
 
     def test_cache_invalidates_on_object_save(self):
         """
@@ -222,13 +209,8 @@ class BlipStorageRetrieval(BlipTVStorageBaseCase):
 
         self.assertEqual(backend.count, 2)
 
-        self.assertEqual(
-                embed,
-                ('<embed src="http://blip.tv/play/AYKnyioC" '
-                   'type="application/x-shockwave-flash" width="480" '
-                   'height="300" allowscriptaccess="always" '
-                   'allowfullscreen="true">'
-                 '</embed>'))
+        self.assertTrue(
+                embed.startswith('<embed src="http://blip.tv/play/AYKnyioC"'))
 
 class BlipTVAdminTestCase(BlipTVAdminBaseCase):
 
@@ -248,11 +230,8 @@ class BlipTVAdminTestCase(BlipTVAdminBaseCase):
     def test_video_isnt_related_without_admin(self):
         response = self.client.get('/blip/2')
         self.assertContains(response,
-                        ('<embed src="http://blip.tv/play/AYKnyioC" '
-                   'type="application/x-shockwave-flash" width="480" '
-                   'height="300" allowscriptaccess="always" '
-                   'allowfullscreen="true">'
-                 '</embed>'), count=0, status_code=200)
+                        '<embed src="http://blip.tv/play/AYKnyioC"',
+                        count=0, status_code=200)
 
     def test_video_is_related_through_admin(self):
         """
@@ -269,11 +248,8 @@ class BlipTVAdminTestCase(BlipTVAdminBaseCase):
 
         response = self.client.get('/blip/2')
         self.assertContains(response,
-                        ('<embed src="http://blip.tv/play/AYKnyioC" '
-                   'type="application/x-shockwave-flash" width="480" '
-                   'height="300" allowscriptaccess="always" '
-                   'allowfullscreen="true">'
-                 '</embed>'), count=1, status_code=200)
+                        '<embed src="http://blip.tv/play/AYKnyioC"',
+                        count=1, status_code=200)
 
 
 
