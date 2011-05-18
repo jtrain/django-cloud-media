@@ -74,7 +74,11 @@ class BlipTVStorage(BaseStorage):
         
         # resource_type and resource_id are unique together so use them as
         # cache keys.
-        key = unicode((resource.resource_type, resource.resource_id)).replace(' ', '')
+        key = unicode(
+                (resource.resource_type,
+                 resource.resource_id)
+              ).replace(' ', '')
+
         remote_resource = cache.get(key)
         if not remote_resource:
             remote_resource = self._urlopen_read(uri)
@@ -122,9 +126,17 @@ class BlipTVStorage(BaseStorage):
         # which isn't valid json so I remove the surrounding function call.
         blip_json = illformatted_json.replace('blip_ws_results(', '')[:-3]
 
-        embed_url = loads(blip_json)[0]['embedUrl']
-        resource.payload = embed_url
+        resource.payload = self.get_payload(loads(blip_json))
 
         return self.render_resource(resource)
 
+
+    def get_payload(self, blip_retval):
+        """
+        Returns an object that will be set as the resource payload attribute.
+
+        Args:
+            blip_retval: The loaded json returned by bliptv api call.
+        """
+        return blip_retval[0]['embedUrl']
 
