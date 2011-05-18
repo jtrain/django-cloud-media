@@ -96,7 +96,6 @@ class Resource(models.Model):
     class Meta:
         verbose_name        = _('resource')
         verbose_name_plural = _('resources')
-        unique_together     = (('resource_id', 'resource_type'),)
         ordering            = ('resource_type', 'title')
 
     def __unicode__(self):
