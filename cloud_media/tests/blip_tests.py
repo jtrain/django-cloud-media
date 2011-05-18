@@ -80,6 +80,17 @@ class CloudMediaBaseCase(TestCase):
         self.admin.save()
                             
 
+class BlipTVURIApiFile(object):
+
+    def uri(self):
+        return 'http://www.blip.tv/file/4824610/'
+
+class BlipTVURIApiPosts(object):
+
+    def uri(self):
+        return ('http://blip.tv/clojure/'
+                'stuart-halloway-simplicity-ain-t-easy-4842694')
+
 class BlipTVStorageBaseCase(CloudMediaBaseCase):
 
     def setUp(self):
@@ -90,7 +101,7 @@ class BlipTVStorageBaseCase(CloudMediaBaseCase):
         )
 
         # now create a resource object.
-        resource_id = dumps(dict(url='http://www.blip.tv/file/4824610/'))
+        resource_id = dumps(dict(url=self.uri()))
                     
         self.resource = Resource.objects.create(
                 title='Stuart Holloway: "Simplicity Ain\'t Easy"',
@@ -137,10 +148,9 @@ class BlipTVAdminBaseCase(BlipTVStorageBaseCase):
 
     def relate_media(self): pass
 
-class BlipStorageRetrieval(BlipTVStorageBaseCase):
+class BlipStorageRetrieval(object):
     '''
     Test that the backend can retrieve the media from the remote blip.tv host.
-
     '''
 
     urls = 'cloud_media.tests.urls'
@@ -212,7 +222,25 @@ class BlipStorageRetrieval(BlipTVStorageBaseCase):
         self.assertTrue(
                 embed.startswith('<embed src="http://blip.tv/play/AYKnyioC"'))
 
-class BlipTVAdminTestCase(BlipTVAdminBaseCase):
+
+class BlipStorageRetrievalFileUri(
+        BlipTVURIApiFile,
+        BlipStorageRetrieval,
+        BlipTVStorageBaseCase,):
+    """
+    Run the BlipStorageRetrieval tests for the /file/ style uri.
+    """
+
+class BlipStorageRetrievalPostsUri(
+        BlipTVURIApiPosts,
+        BlipStorageRetrieval,
+        BlipTVStorageBaseCase):
+    """
+    Run the BlipStorageRetrieval tests for the /username/ style uri.
+    """
+
+
+class BlipTVAdminTestCase(BlipTVAdminBaseCase, BlipTVURIApiPosts):
 
     def setUp(self):
         super(BlipTVAdminTestCase, self).setUp()
