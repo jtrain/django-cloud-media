@@ -191,7 +191,7 @@ def save_file_id_if_given_posts_id(sender, instance, **kwargs):
     """
     resource_id = loads(instance.resource_id)
 
-    url = resource_id.pop('url')
+    url = resource_id.pop('url', None)
     _id = resource_id.pop('id', None)
 
     if not url:
