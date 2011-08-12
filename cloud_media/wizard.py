@@ -135,12 +135,6 @@ class FormWizard(object):
             self.process_step(request, form, current_step)
             next_step = current_step + 1
 
-            # allow form to do admin specific things.
-            try:
-                form.setadmin(self._model_admin, request)
-            except AttributeError:
-                pass
-
             if next_step == self.num_steps():
                 return self.done(request, previous_form_list + [form])
             else:
@@ -148,6 +142,12 @@ class FormWizard(object):
                     raise NotImplementedError("Your %s class has not initialized multipart form as last." % self.__class__.__name__)
                 form = self.get_form(next_step)
                 self.step = current_step = next_step
+
+                # allow form to do admin specific things.
+                try:
+                    form.setadmin(self._model_admin, request)
+                except AttributeError:
+                    pass
 
         return self.render(form, request, current_step)
 
