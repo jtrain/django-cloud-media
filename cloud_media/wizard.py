@@ -135,6 +135,12 @@ class FormWizard(object):
             self.process_step(request, form, current_step)
             next_step = current_step + 1
 
+            # allow form to do admin specific things.
+            try:
+                form.setadmin(self._model_admin, request)
+            except AttributeError:
+                pass
+
             if next_step == self.num_steps():
                 return self.done(request, previous_form_list + [form])
             else:
