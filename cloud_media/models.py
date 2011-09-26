@@ -18,8 +18,9 @@ HOSTING_PROVIDERS = getattr(settings,
 # managers.
 
 class ResourceManager(models.Manager):
-    def get_by_natural_key(self, resource_id, resource_type):
+    def get_by_natural_key(self, title, resource_id, resource_type):
         return self.get(
+                title=title,
                 resource_id=resource_id,
               resource_type=resource_type
         )
@@ -105,7 +106,7 @@ class Resource(models.Model):
                 self.get_resource_type_display())
 
     def natural_key(self):
-        return (self.resource_id, self.resource_type)
+        return (self.title, self.resource_id, self.resource_type)
 
 class RelatedMedia(models.Model):
     """

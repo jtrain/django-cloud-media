@@ -85,7 +85,6 @@ class RemoteMediaWizard(FormWizard):
         The final form should provide the resource_id.
 
         """
-
         data = {}
         resource_id = None
         for form in form_list:
