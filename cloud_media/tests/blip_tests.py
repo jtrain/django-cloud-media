@@ -30,6 +30,15 @@ from cloud_media.backends.bliptv import BlipTVStorage
 
 LIVE_URLS = False
 
+def get_video_id_from_url(url):
+    """
+    Assuming the url format is of the form:
+        http(s)://something.com/something/title-of-video-3030303/?skin=json
+
+    return the number portion only.
+    """
+    return filter(unicode.isdigit, url)
+
 class BlipTVNoDownloadStorage(BlipTVStorage):
     """
     Instead of downloading the json from blip.tv this base case
@@ -45,7 +54,7 @@ class BlipTVNoDownloadStorage(BlipTVStorage):
         if LIVE_URLS:
             return super(BlipTVNoDownloadStorage, self)._urlopen_read(uri)
 
-        videoid, = filter(unicode.isdigit, uri.split('/'))
+        videoid = get_video_id_from_url(uri)
         if not os.path.exists(os.path.join('.cached', 'bliptv')):
             try:
                 os.makedirs(os.path.join('.cached', 'bliptv'))

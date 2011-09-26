@@ -64,7 +64,7 @@ class BlipTVStorage(BaseStorage):
         return BlipTVURLForm
 
     def blip_file_uri(self):
-        return u"http://www.blip.tv/file/%s/?skin=json"
+        return u"http://www.blip.tv/file/%s/?skin=json&version=2"
 
     def _urlopen_read(self, uri):
         return urlopen(uri).read()
@@ -95,7 +95,7 @@ class BlipTVStorage(BaseStorage):
         >>> handle_url_resource_id('http://blip.tv/file/1234/')
         http://blip.tv/file/1234/?skin=json
         """
-        return url + '?skin=json'
+        return url + '?skin=json&version=2'
 
     def handle_id_resource_id(self, _id):
         """
@@ -168,7 +168,10 @@ class BlipTVStorage(BaseStorage):
         Args:
             blip_retval: The loaded json returned by bliptv api call.
         """
-        return blip_retval[0]['embedUrl']
+        try:
+            return blip_retval[0]['embedUrl']
+        except KeyError:
+            return blip_retval[0]['Post']['embedUrl']
 
 #--------------------------------------------------------------------------------
 # Signals.
@@ -217,6 +220,6 @@ def save_file_id_if_given_posts_id(sender, instance, **kwargs):
     # query the blip.tv api to find the file_id for this post_id.
     vid_info, = loads(reformat_json(None, urlopen(json_url).read()))
 
-    new_resource_id = dumps({'url': vid_info[0]['url'] + '/'})
+    new_resource_id = dumps({'url': vid_info['Post']['url'] + '/'})
 
     instance.resource_id = new_resource_id
